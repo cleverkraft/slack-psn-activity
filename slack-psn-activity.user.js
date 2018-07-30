@@ -2,7 +2,7 @@
 //
 // @name         slack-psn-activity
 // @namespace    http://tampermonkey.net/
-// @version      0.9.4
+// @version      0.9.5
 // @description  Post notifications of activity to a Slack community
 // @author       Alex Shaffer (alex@nosuch.org)
 // @match        https://my.playstation.com/whatsnew
@@ -49,14 +49,10 @@
 
     getPsnFriends.then(function(value) {
 
+        console.log("Loaded psnFriends.");
         psnFriends = value;
 
-        psnFriends.forEach(function(friend, index) {
-
-            friend.status="unknown";
-            friend.game="none";
-
-        });
+        console.log(psnFriends);
 
     });
 
@@ -169,6 +165,8 @@
 
         psnFriends.sort(function(a,b) {return (a.onlineId > b.onlineId) ? 1 : ((b.onlineId > a.onlineId) ? -1 : 0);});
 
+        console.log(psnFriends);
+
         var PSN = "PSN";
 
         var activities = { notify: false }; // the activities queue, used to keep track of who is doing what, and what changed since last time.
@@ -205,7 +203,7 @@
 
                 if ((friend.status!="unknown") && (friend.status!=currentStatus)) {
 
-                    // console.log(timestampString()+" | PSN status change for "+friend.name+" from "+friend.status+" to "+currentStatus+".");
+                    console.log(timestampString()+" | PSN status change for "+friend.name+" from "+friend.status+" to "+currentStatus+".");
 
                     if(currentStatus==="online") {
 
@@ -223,7 +221,7 @@
 
                     // status did not change.
 
-                    // console.log(timestampString()+" | PSN status for "+friend.name+" remains "+currentStatus+".");
+                    console.log(timestampString()+" | PSN status for "+friend.name+" remains "+currentStatus+".");
 
                     if(currentStatus==='online') {
 
@@ -256,7 +254,7 @@
 
                     }
 
-                    // console.log(timestampString()+" | Friend "+friend.name+" went from playing "+friend.game+" to playing "+currentGame+".");
+                    console.log(timestampString()+" | Friend "+friend.name+" went from playing "+friend.game+" to playing "+currentGame+".");
 
                 } else {
 
@@ -266,7 +264,7 @@
 
                         activitiesEntry(activities, currentGame);
                         activities[gameKey(currentGame)].current.push(friend.name);
-                        // console.log(timestampString()+" | Friend "+friend.name+" continues playing "+friend.game+".");
+                        console.log(timestampString()+" | Friend "+friend.name+" continues playing "+friend.game+".");
 
                     }
 
@@ -279,6 +277,8 @@
 
 
         });
+
+        console.log(activities);
 
         GM.setValue("slack-psn-activity_friends",psnFriends);
 
@@ -342,11 +342,23 @@
 
                 // to avoid duplicate notifications across page refresh/reloads...
 
+                console.log("Last message:");
+                console.log(lastMsg);
+
+                console.log("This message:");
+                console.log(notifyMsg);
+
                 if (notifyMsg != lastMsg) {
+
+                    console.log("Sending...");
 
                     lastMsg = notifyMsg;
                     GM.setValue("slack-psn-activity_lastmsg", notifyMsg);
                     slackMessage(notifyMsg);
+
+                } else {
+
+                    console.log("Message is repeat. Ignoring.");
 
                 }
 
