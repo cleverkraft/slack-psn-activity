@@ -2,7 +2,7 @@
 //
 // @name         slack-psn-activity
 // @namespace    http://tampermonkey.net/
-// @version      0.9.5
+// @version      0.9.6
 // @description  Post notifications of activity to a Slack community
 // @author       Alex Shaffer (alex@nosuch.org)
 // @match        https://my.playstation.com/whatsnew
@@ -24,7 +24,7 @@
     GM.registerMenuCommand("Send message to Slack",saySomething);
 
     var pollDelay = 30*1000; // Delay is in milliseconds. This will update every half minute.
-    var refreshPeriod = 8 * 60 * 1000; // Time to refresh the whole page, in milliseconds. Default is 8 hours.
+    var refreshPeriod = 6 * 60 * 60 * 1000; // Time to refresh the whole page, in milliseconds. Default is 6 hours.
 
     var slackHook = "";
     var psnFriends = [];
@@ -49,10 +49,7 @@
 
     getPsnFriends.then(function(value) {
 
-        console.log("Loaded psnFriends.");
         psnFriends = value;
-
-        console.log(psnFriends);
 
     });
 
@@ -84,7 +81,7 @@
 
     function checkFriendStatus() {
 
-        console.log("Checking friend status.");
+        console.log(timestampString()+" | Checking friend status.");
 
         // check if friends list is visible, otherwise it might not get updates
 
@@ -109,7 +106,7 @@
 
         // Just in case the activity array and friend array don't match (mid update?) we check... If the don't, let's skip it this round
         if (friendsOnline.length != friendsActivity.length) {
-            console.log("Skipping.");
+            console.log(timestampString()+" | Skipping update.");
             return; // skip this update
         }
 
@@ -165,8 +162,6 @@
 
         psnFriends.sort(function(a,b) {return (a.onlineId > b.onlineId) ? 1 : ((b.onlineId > a.onlineId) ? -1 : 0);});
 
-        console.log(psnFriends);
-
         var PSN = "PSN";
 
         var activities = { notify: false }; // the activities queue, used to keep track of who is doing what, and what changed since last time.
@@ -203,7 +198,7 @@
 
                 if ((friend.status!="unknown") && (friend.status!=currentStatus)) {
 
-                    console.log(timestampString()+" | PSN status change for "+friend.name+" from "+friend.status+" to "+currentStatus+".");
+                    // console.log(timestampString()+" | PSN status change for "+friend.name+" from "+friend.status+" to "+currentStatus+".");
 
                     if(currentStatus==="online") {
 
@@ -221,7 +216,7 @@
 
                     // status did not change.
 
-                    console.log(timestampString()+" | PSN status for "+friend.name+" remains "+currentStatus+".");
+                    // console.log(timestampString()+" | PSN status for "+friend.name+" remains "+currentStatus+".");
 
                     if(currentStatus==='online') {
 
@@ -254,7 +249,7 @@
 
                     }
 
-                    console.log(timestampString()+" | Friend "+friend.name+" went from playing "+friend.game+" to playing "+currentGame+".");
+                    // console.log(timestampString()+" | Friend "+friend.name+" went from playing "+friend.game+" to playing "+currentGame+".");
 
                 } else {
 
@@ -264,7 +259,7 @@
 
                         activitiesEntry(activities, currentGame);
                         activities[gameKey(currentGame)].current.push(friend.name);
-                        console.log(timestampString()+" | Friend "+friend.name+" continues playing "+friend.game+".");
+                        // console.log(timestampString()+" | Friend "+friend.name+" continues playing "+friend.game+".");
 
                     }
 
@@ -278,7 +273,7 @@
 
         });
 
-        console.log(activities);
+        // console.log(activities);
 
         GM.setValue("slack-psn-activity_friends",psnFriends);
 
@@ -342,23 +337,11 @@
 
                 // to avoid duplicate notifications across page refresh/reloads...
 
-                console.log("Last message:");
-                console.log(lastMsg);
-
-                console.log("This message:");
-                console.log(notifyMsg);
-
                 if (notifyMsg != lastMsg) {
-
-                    console.log("Sending...");
 
                     lastMsg = notifyMsg;
                     GM.setValue("slack-psn-activity_lastmsg", notifyMsg);
                     slackMessage(notifyMsg);
-
-                } else {
-
-                    console.log("Message is repeat. Ignoring.");
 
                 }
 
@@ -636,8 +619,9 @@
         }
 
         var currently = new Date();
+        var elapsed = currently-lastRefresh;
 
-        if ((currently - lastRefresh) > refreshPeriod) {
+        if (elapsed > refreshPeriod) {
 
             location.reload();
 
