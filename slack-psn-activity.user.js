@@ -2,7 +2,7 @@
 //
 // @name         slack-psn-activity
 // @namespace    http://tampermonkey.net/
-// @version      0.9.6
+// @version      0.9.8
 // @description  Post notifications of activity to a Slack community
 // @author       Alex Shaffer (alex@nosuch.org)
 // @match        https://my.playstation.com/whatsnew
@@ -61,21 +61,21 @@
 
     });
 
-    window.addEventListener('load', function() {
+    console.log(timestampString()+" | Polling will take place in "+pollDelay+" ms.");
 
-        setTimeout(pollFriendStatus,pollDelay);
+    setTimeout(pollFriendStatus,pollDelay);
 
-    }, false);
 
 
     function pollFriendStatus() {
 
         // We poll in this function so that the timeout will get set even if there's an error.
         // This prevents the script from stalling out.
-
-        checkFriendStatus();
+        // This is why we also set the timer before doing the update... in case of an error.
 
         setTimeout(pollFriendStatus,pollDelay);
+
+        checkFriendStatus();
 
     }
 
@@ -86,6 +86,13 @@
         // check if friends list is visible, otherwise it might not get updates
 
         var friendsList = document.getElementById("sb-friends-icon");
+
+        if ( ! friendsList ) {
+
+            console.log(timestampString()+" | Cannot find friends list. Reloading page...");
+            location.reload();
+
+        }
 
         if (! friendsList.classList.contains("sb-toolbar-icons__item--selected")) {
 
