@@ -100,9 +100,41 @@
 
         }
 
-        var friendsOnline = document.getElementsByClassName("sb-friends__list")[0].getElementsByClassName("sb-online-friends-section")[0].getElementsByClassName("sb-user-tile__online-id");
-        var friendsActivity = document.getElementsByClassName("sb-friends__list")[0].getElementsByClassName("sb-online-friends-section")[0].getElementsByClassName("sb-user-tile__current-activity");
-        var friendsOffline = document.getElementsByClassName("sb-friends__list")[0].getElementsByClassName("sb-offline-friends-section")[0].getElementsByClassName("sb-user-tile__online-id");
+        var friendDataOnline = document.getElementsByClassName("sb-online-friends-section")[0].getElementsByClassName("user-tile"); // get the online data
+        var friendDataOffline = document.getElementsByClassName("sb-offline-friends-section")[0].getElementsByClassName("user-tile") // get the offline data
+
+        // reset lists
+        var friendsOnline = [];
+        var friendsActivity = [];
+        var friendsOffline = [];
+
+        // loop through online data
+        for (i = 0; i < friendDataOnline.length; i++) {
+
+            // pull the online profile data
+            var profileInfo = friendDataOnline[i].getElementsByClassName("user-tile-sb-small__content")[0].getElementsByClassName("user-tile-sb-small__profile-info")[0];
+
+            // get name, which is always there
+            friendsOnline[i]=profileInfo.getElementsByClassName("user-tile-sb-small__profile-info-name")[0].innerText.replace(/^\s+|\s+$/g, '');
+
+            // set activity to nothing (not playing)
+            friendsActivity[i]="";
+
+            // check to see if there's a gaming being played...
+            if (profileInfo.getElementsByClassName("user-tile-sb-small__now-playing--title").length>0) {
+                friendsActivity[i]=profileInfo.getElementsByClassName("user-tile-sb-small__now-playing--title")[0].innerText;
+            }
+
+        }
+
+        // loop through offline data
+        for (i = 0; i < friendDataOffline.length; i++) {
+
+            friendsOffline[i]=friendDataOffline[i].getElementsByClassName("user-tile-sb-small__content")[0].getElementsByClassName("user-tile-sb-small__profile-info")[0].getElementsByClassName("user-tile-sb-small__profile-info-name")[0].innerText.replace(/^\s+|\s+$/g, '')
+
+        }
+
+
 
         var friends = [];
         var status = "online";
@@ -119,8 +151,8 @@
 
         for (i = 0; i < friendsOnline.length; i++) {
 
-            user = friendsOnline[i].innerHTML;
-            var currentActivity = friendsActivity[i].innerHTML || "";
+            user = friendsOnline[i];
+            var currentActivity = friendsActivity[i];
 
             if (currentActivity.length > 0) {
 
@@ -140,7 +172,7 @@
 
         for (i = 0; i < friendsOffline.length; i++) {
 
-            user = friendsOffline[i].innerHTML;
+            user = friendsOffline[i];
             activity = defaultActivity;
 
             friends[friends.length]=({ "user" : user, "status" : status, "activity" : activity});
@@ -256,7 +288,7 @@
 
                     }
 
-                    // console.log(timestampString()+" | Friend "+friend.name+" went from playing "+friend.game+" to playing "+currentGame+".");
+                    console.log(timestampString()+" | Friend "+friend.name+" went from playing "+friend.game+" to playing "+currentGame+".");
 
                 } else {
 
@@ -266,7 +298,7 @@
 
                         activitiesEntry(activities, currentGame);
                         activities[gameKey(currentGame)].current.push(friend.name);
-                        // console.log(timestampString()+" | Friend "+friend.name+" continues playing "+friend.game+".");
+                        console.log(timestampString()+" | Friend "+friend.name+" continues playing "+friend.game+".");
 
                     }
 
@@ -280,7 +312,7 @@
 
         });
 
-        // console.log(activities);
+        console.log(activities);
 
         GM.setValue("slack-psn-activity_friends",psnFriends);
 
@@ -319,14 +351,14 @@
 
             activitiesArray.sort(activityCompare);
 
-            // console.log(JSON.stringify(activitiesArray, null,2));
+            console.log(JSON.stringify(activitiesArray, null,2));
 
             // produce the notification based on the activitiesArray!
-            // slackMessage(s.slack, "Test for multi-line\nMulti-line works!\nHurray!", "#slack-dev");
+
 
             var notifyLines = activityNotification(activitiesArray);
 
-            // console.log(JSON.stringify(notifyLines, null,2));
+            console.log(JSON.stringify(notifyLines, null,2));
 
             if (notifyLines.length>0) {
 
