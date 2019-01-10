@@ -2,7 +2,7 @@
 //
 // @name         slack-psn-activity
 // @namespace    http://tampermonkey.net/
-// @version      0.9.8
+// @version      0.9.9
 // @description  Post notifications of activity to a Slack community
 // @author       Alex Shaffer (alex@nosuch.org)
 // @match        https://my.playstation.com/whatsnew
@@ -732,12 +732,16 @@
 
         for (var i=0; i< psnFriends.length; i++) {
 
-            var newName = prompt("Name for PSN user \""+psnFriends[i].onlineId+"\"?",psnFriends[i].name);
+            if (psnFriends[i].onlineId) {
 
-            if (newName) {
-                psnFriends[i].name=newName;
-            } else {
-                break;
+                var newName = prompt("Name for PSN user \""+psnFriends[i].onlineId+"\"?",psnFriends[i].name);
+
+                if (newName) {
+                    psnFriends[i].name=newName;
+                } else {
+                    break;
+                }
+
             }
 
         }
